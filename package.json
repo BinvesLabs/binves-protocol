@@ -1,0 +1,22 @@
+{
+  "name": "binves-protocol",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/binves/binves-protocol.git"
+  },
+  "author": "Adrian",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/binves/binves-protocol/issues"
+  },
+  "homepage": "https://github.com/binves/binves-protocol#readme",
+  "devDependencies": {
+    "@openzeppelin/cli": "^2.8.2"
+  }
+}

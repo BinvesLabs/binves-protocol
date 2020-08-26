@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/binves/binves-protocol#readme",
   "devDependencies": {
-    "@openzeppelin/cli": "^2.8.2"
+    "@openzeppelin/cli": "^2.8.2",
+    "@openzeppelin/contracts": "^3.1.0"
   }
 }

@@ -35,7 +35,7 @@ contract GenericFund is ERC20, ERC20Burnable, AccessControl {
         return true;
     }
 
-    function redeemCErc20Tokens(address cErc20Contract, uint256 redeemAmount) public onlyFundManager returns (bool) {
+    function redeemCErc20TokensFromCompound(address cErc20Contract, uint256 redeemAmount) public onlyFundManager returns (bool) {
         return true;
     }
 
@@ -43,7 +43,19 @@ contract GenericFund is ERC20, ERC20Burnable, AccessControl {
         return true;
     }
 
-    function redeemEth(uint256 redeemAmount) public onlyFundManager returns (bool) {
+    function redeemEthFromCompound(uint256 redeemAmount) public onlyFundManager returns (bool) {
+        return true;
+    }
+
+    function depositErc20(address erc20Contract, uint256 depositAmount) public returns (bool) {
+        return true;
+    }
+
+    function depositEth(uint256 depositAmount) public returns (bool) {
+        return true;
+    }
+
+    function withdraw(uint256 withdrawAmount) public returns (bool) {
         return true;
     }
 

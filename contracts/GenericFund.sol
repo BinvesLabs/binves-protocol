@@ -2,16 +2,16 @@
 
 pragma solidity ^0.6.0;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Burnable.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/access/AccessControl.sol";
 
 interface Compound {
     function mint(uint256 mintAmount) external returns (uint256);
     function redeem(uint256 redeemTokens) external returns (uint256);
 }
 
-contract GenericFund is ERC20, ERC20Burnable, AccessControl {
+contract GenericFund is ERC20UpgradeSafe, ERC20BurnableUpgradeSafe, AccessControlUpgradeSafe {
 
     bytes32 public constant FUND_MANAGER_ROLE = keccak256("FUND_MANAGER_ROLE");
 
@@ -24,7 +24,8 @@ contract GenericFund is ERC20, ERC20Burnable, AccessControl {
         require(hasRole(MINTER_ROLE, msg.sender), "Caller is not a fund manager");
     }
 
-    constructor(string fundName, string fundSymbol) public ERC20(fundName, fundSymbol) {
+    function initialize(string fundName, string fundSymbol) public initializer {
+        __ERC20_init(fundName, fundSymbol);
         // Grant the fund manager role to a specified account
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
@@ -46,6 +47,8 @@ contract GenericFund is ERC20, ERC20Burnable, AccessControl {
     function redeemEthFromCompound(uint256 redeemAmount) public onlyFundManager returns (bool) {
         return true;
     }
+
+    // Investor Operations
 
     function depositErc20(address erc20Contract, uint256 depositAmount) public returns (bool) {
         return true;

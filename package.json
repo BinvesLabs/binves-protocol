@@ -18,6 +18,7 @@
   "homepage": "https://github.com/binves/binves-protocol#readme",
   "devDependencies": {
     "@openzeppelin/cli": "^2.8.2",
-    "@openzeppelin/contracts": "^3.1.0"
+    "@openzeppelin/contracts-ethereum-package": "^3.0.0",
+    "@openzeppelin/upgrades": "^2.8.0"
   }
 }

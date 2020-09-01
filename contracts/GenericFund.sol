@@ -19,15 +19,26 @@ contract GenericFund is ERC20UpgradeSafe, ERC20BurnableUpgradeSafe, AccessContro
 
     mapping (address => bool) isCompoundCErc20Contract;
 
+    mapping (address => bool) allowedDepositAssets;
+
     modifier onlyFundManager {
         // Check that the calling account has the fund manager role
         require(hasRole(MINTER_ROLE, msg.sender), "Caller is not a fund manager");
     }
 
-    function initialize(string fundName, string fundSymbol) public initializer {
+    function initialize(string fundName, string fundSymbol, mapping (address => bool) allowedDepositAssets) public initializer {
         __ERC20_init(fundName, fundSymbol);
         // Grant the fund manager role to a specified account
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        allowedDepositAssets = allowedDepositAssets;
+    }
+
+    function accrueManagementFee() public returns (uint) {
+        return uint();
+    }
+
+    function claimManagementFee() public onlyFundManager returns (bool) {
+        return true;
     }
 
     // Compound Operations
@@ -36,7 +47,7 @@ contract GenericFund is ERC20UpgradeSafe, ERC20BurnableUpgradeSafe, AccessContro
         return true;
     }
 
-    function redeemCErc20TokensFromCompound(address cErc20Contract, uint256 redeemAmount) public onlyFundManager returns (bool) {
+    function redeemCErc20FromCompound(address cErc20Contract, uint256 redeemAmount) public onlyFundManager returns (bool) {
         return true;
     }
 

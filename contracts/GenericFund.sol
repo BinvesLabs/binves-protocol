@@ -5,6 +5,8 @@ pragma solidity ^0.6.0;
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Burnable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/access/AccessControl.sol";
+import "Libraries/TransferHelper.sol";
+import "Libraries/UniswapOracle.sol";
 
 interface Compound {
     function mint(uint256 mintAmount) external returns (uint256);
@@ -20,6 +22,9 @@ contract GenericFund is ERC20UpgradeSafe, ERC20BurnableUpgradeSafe, AccessContro
     mapping (address => bool) isCompoundCErc20Contract;
 
     mapping (address => bool) allowedDepositAssets;
+
+    // rinkeby oracle
+    address private ethUsdtOracle = new UniswapOracle(Address(0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f), Address(0xc778417e063141139fce010982780140aa0cd5ab), Address());
 
     modifier onlyFundManager {
         // Check that the calling account has the fund manager role
@@ -61,15 +66,10 @@ contract GenericFund is ERC20UpgradeSafe, ERC20BurnableUpgradeSafe, AccessContro
 
     // Investor Operations
 
-    function depositErc20(address erc20Contract, uint256 depositAmount) public returns (bool) {
-        return true;
-    }
+    function investErc20(address erc20Contract, uint256 depositAmount) public returns (bool) {
+        require(erc20Contract == Address(0xdac17f958d2ee523a2206206994597c13d831ec7), 'GenericFund: CAN_ONLY_INVEST_TETHER');
+        TransferHelper.safeTransferFrom(erc20Contract, msg.sender, Address(this), depositAmount);
 
-    function depositEth(uint256 depositAmount) public returns (bool) {
-        return true;
-    }
-
-    function withdraw(uint256 withdrawAmount) public returns (bool) {
         return true;
     }
 

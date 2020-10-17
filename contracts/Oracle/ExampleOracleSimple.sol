@@ -1,19 +1,20 @@
-pragma solidity=0.6.6;
+pragma solidity >=0.6.6;
 
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 import '@uniswap/lib/contracts/libraries/FixedPoint.sol';
+
 import '@uniswap/v2-periphery/contracts/libraries/UniswapV2OracleLibrary.sol';
-import '@uniswap/v2-periphery/contracts/libraries/UniswapV2Library.sol';
+import './UniswapV2Library.sol';
 
 // fixed window oracle that recomputes the average price for the entire period once every period
 // note that the price average is only guaranteed to be over at least 1 period, but may be over a longer period
-contract UniswapOracle {
+contract ExampleOracleSimple {
     using FixedPoint for *;
 
     uint public constant PERIOD = 24 hours;
 
-    IUniswapV2Pair immutable pair;
+IUniswapV2Pair immutable pair;
 address public immutable token0;
 address public immutable token1;
 

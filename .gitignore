@@ -4,3 +4,6 @@
 .openzeppelin/.session
 node_modules
 build/contracts
+.eslintrc.js
+.solhint.json
+package-lock.json

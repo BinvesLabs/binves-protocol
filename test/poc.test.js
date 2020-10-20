@@ -1,29 +1,30 @@
 // Load compiled artifacts
 
+const web3 = require('web3');
 const UniswapV2FactoryArtifact = require('@uniswap/v2-core/build/UniswapV2Factory');
 const UniswapV2PairArtifact = require('@uniswap/v2-core/build/UniswapV2Pair');
 const UniswapV2RouterArtifact = require('@uniswap/v2-periphery/build/UniswapV2Router02');
 const UniswapSimpleOracleArtifact = require('@uniswap/v2-periphery/build/ExampleOracleSimple');
 
-const { BN, constants, time } = require('@openzeppelin/test-helpers');
+// const { BN, constants, time } = require('@openzeppelin/test-helpers');
+const { time } = require('@openzeppelin/test-helpers');
 const { expect } = require('chai');
 
 function expandTo18Decimals(number) {
-  return new BN(number).mul(new BN(10).pow(new BN(18)));
+  return ethers.BigNumber.from(number)
+    .mul(ethers.BigNumber.from(10)
+    .pow(ethers.BigNumber.from(18)));
 }
 
-function retractFrom18Decimals(number) {
-  return web3.utils.fromWei(number, 'ether');
-}
 
-describe('MyContract', function () {
+describe('Proof of concept', function () {
 
   beforeEach(async function() {
     const [owner] = await ethers.getSigners();
-    const owner_address = owner.getAddress();
+    this.owner_address = owner.getAddress();
     const overrides = { from: owner };
     const MockErc20 = await ethers.getContractFactory('MockErc20');
-    const Fund = await ethers.getContractFactory('Fund');
+    this.Fund = await ethers.getContractFactory('Fund');
 
     const UniswapFactoryContract = await ethers.getContractFactory(UniswapV2FactoryArtifact.abi, UniswapV2FactoryArtifact.bytecode);
     const UniswapRouterContract = await ethers.getContractFactory(UniswapV2RouterArtifact.abi, UniswapV2RouterArtifact.bytecode);
@@ -33,73 +34,81 @@ describe('MyContract', function () {
     await this.wether.deployed();
     this.tether = await MockErc20.deploy("tether", "USDT");
     await this.tether.deployed();
-    this.factory = await UniswapFactoryContract.deploy(owner_address);
+    this.factory = await UniswapFactoryContract.deploy(this.owner_address);
     await this.factory.deployed();
     this.router = await UniswapRouterContract.deploy(this.factory.address, this.wether.address );
     await this.router.deployed();
     await this.factory.createPair(this.wether.address, this.tether.address);
-    const ethUsdtPairAddress = await this.factory.getPair(this.wether.address, this.tether.address);
-    console.log(ethers.Signer.isSigner(ethers.provider.getSigner(ethUsdtPairAddress)));
-    this.wethUsdtPair = await ethers.getContractFactory(UniswapV2PairArtifact.abi, UniswapV2PairArtifact.bytecode, ethers.provider.getSigner(ethUsdtPairAddress));
+    // const ethUsdtPairAddress = await this.factory.getPair(this.wether.address, this.tether.address);
+    // console.log(ethers.Signer.isSigner(ethers.provider.getSigner(ethUsdtPairAddress)));
+    // this.wethUsdtPair = await ethers.getContractFactory(UniswapV2PairArtifact.abi, UniswapV2PairArtifact.bytecode, ethers.provider.getSigner(ethUsdtPairAddress));
     await this.wether.approve(this.router.address, expandTo18Decimals(100));
     await this.tether.approve(this.router.address, expandTo18Decimals(30000));
+    // console.log(await this.wether.balanceOf(owner_address));
     await this.router.addLiquidity(
       this.wether.address,
       this.tether.address,
       expandTo18Decimals(100),
       expandTo18Decimals(30000),
-      0,
-      0,
-      owner_address,
-      constants.MAX_UINT256
+      expandTo18Decimals(0),
+      expandTo18Decimals(0),
+      this.owner_address,
+      ethers.constants.MaxUint256
       // overrides
     );
-    console.log('==========================================');
     this.oracle = await UniswapOracleContract.deploy(this.factory.address, this.wether.address, this.tether.address);
-    await time.increase(time.duration.days(1));
   });
 
-  it('investErc20', async function () {
-    const fund = await Fund.deploy("Cook", "COK", this.wether.address, this.tether.address, this.oracle.address, this.router.address);
-    await this.tether.approve(fund.address, new BN(1000000), overrides);
-    await this.wether.approve(fund.address, new BN(1000000), overrides);
-    await fund.investErc20(this.tether.address, new BN(10000), overrides);
-    let shares = await fund.balanceOf(owner_address);
-    expect(shares).to.be.bignumber.equal(new BN(1000));
-    await fund.investErc20(this.wether.address, new BN(10), overrides);
-    shares = await fund.balanceOf(owner_address);
-    expect(shares).to.be.bignumber.equal(new BN(1300));
+  it('should be able to invest ERC20', async function () {
+    const fund = await this.Fund.deploy("Cook", "COK", this.wether.address, this.tether.address, this.oracle.address, this.router.address);
+    await fund.deployed();
+    await this.tether.approve(fund.address, expandTo18Decimals(1000000));
+    await this.wether.approve(fund.address, expandTo18Decimals(1000000));
+    await fund.investErc20(this.tether.address, expandTo18Decimals(10000));
+    let shares = await fund.balanceOf(this.owner_address);
+    expect(ethers.utils.formatEther(shares)).to.equal('1000.0');
+    ethers.provider.send("evm_increaseTime", [86400])   // add 24 hours
+    ethers.provider.send("evm_mine")      // mine the next block
+    await fund.investErc20(this.wether.address, expandTo18Decimals(10));
+    shares = await fund.balanceOf(this.owner_address);
+    expect(ethers.utils.formatEther(shares)).equal('1300.0');
   });
 
-  it('swapErc20', async function() {
+  it('should be able to swap ERC20', async function() {
     const approveamount = expandTo18Decimals(1000000)
     const investamount = expandTo18Decimals(10000)
-    const usdtswapamount = expandTo18Decimals(700);
-    const fund = await Fund.deploy("Cook", "COK", this.wether.address, this.tether.address, this.oracle.address, this.router.address);
-    await this.tether.approve(fund.address, approveamount, overrides);
-    await this.wether.approve(fund.address, approveamount, overrides);
-    await fund.investErc20(this.tether.address, investamount, overrides);
-    let shares = await fund.balanceOf(owner_address);
+    const usdtswapamount = expandTo18Decimals(5000);
+    const fund = await this.Fund.deploy("Cook", "COK", this.wether.address, this.tether.address, this.oracle.address, this.router.address);
+    await fund.deployed();
+    await this.tether.approve(fund.address, approveamount);
+    await this.wether.approve(fund.address, approveamount);
+    await fund.investErc20(this.tether.address, investamount);
+    let shares = await fund.balanceOf(this.owner_address);
     fund.swapErc20(this.tether.address, this.wether.address, usdtswapamount);
-    let amountUSDT = retractFrom18Decimals(await this.tether.balanceOf(fund.address));
-    let amountweth = retractFrom18Decimals(await this.wether.balanceOf(fund.address));
-    expect(amountUSDT).equal('9300');
-    expect(amountweth).equal('2.273445414832936454');
+    let amountUSDT = await this.tether.balanceOf(fund.address);
+    let amountweth = await this.wether.balanceOf(fund.address);
+    expect(ethers.utils.formatEther(amountUSDT)).to.equal('5000.0');
+    expect(ethers.utils.formatEther(amountweth)).to.equal('14.248963841646419894');
 
   });
 
-  //it('withdrawErc20', async function() {
-  //  const approveamount = expandTo18Decimals(1000000)
-  //  const investamount = expandTo18Decimals(10000)
-  //  const withdrawshare = expandTo18Decimals(500);
-  //  const fund = await Fund.depoly("Cook", "COK", this.wether.address, this.tether.address, this.oracle.address, this.router.address);
-  //  await this.tether.approve(fund.address, approveamount, overrides);
-  //  await this.wether.approve(fund.address, approveamount, overrides);
-  //  await fund.investErc20(this.tether.address, investamount, overrides);
-  //  let shares = await fund.balanceOf(owner);
-  //  await fund.withdrawErc20(this.wether.address, withdrawshare);
-  //  let wethbalance = await this.wether.balanceOf(owner);
-  //  console.log(retractFrom18Decimals(wethbalance));
-  //});
+  it('withdrawErc20', async function() {
+    const approveamount = expandTo18Decimals(1000000)
+    const investamount = expandTo18Decimals(10000)
+    const withdrawshare = expandTo18Decimals(500);
+    let wethbalance = await this.wether.balanceOf(this.owner_address);
+    // const withdrawshare = 500;
+    const fund = await this.Fund.deploy("Cook", "COK", this.wether.address, this.tether.address, this.oracle.address, this.router.address);
+    await fund.deployed();
+    await this.tether.approve(fund.address, approveamount);
+    await this.wether.approve(fund.address, approveamount);
+    await fund.investErc20(this.tether.address, investamount);
+    let shares = await fund.balanceOf(this.owner_address);
+    ethers.provider.send("evm_increaseTime", [86400])   // add 24 hours
+    ethers.provider.send("evm_mine")      // mine the next block
+    await fund.withdrawErc20(this.wether.address, withdrawshare);
+    wethbalance = await this.wether.balanceOf(this.owner_address);
+    expect(ethers.utils.formatEther(wethbalance)).to.equal('999999914.248963841646419894');
+  });
 });
 

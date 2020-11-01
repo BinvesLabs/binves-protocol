@@ -1,9 +1,7 @@
-.idea
-# OpenZeppelin
-.openzeppelin/dev-*.json
-.openzeppelin/.session
 node_modules
-build/contracts
-.eslintrc.js
-.solhint.json
-package-lock.json
+.openzeppelin
+.idea
+
+#Hardhat files
+cache
+artifacts

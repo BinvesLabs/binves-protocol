@@ -6,6 +6,8 @@ import makerAddresses from "./shared/makerAddress.json";
 import ProxyRegistryInterfaceContract from "../artifacts/contracts/interfaces/ProxyRegistryInterface.sol/ProxyRegistryInterface.json";
 import DSProxyContractFactoryContract from "../artifacts/contracts/interfaces/DSProxyInterface.sol/DSProxyInterface.json";
 import {getProxy} from "./shared/utilities";
+import {DsProxy, DsProxyInterface} from "../typechain/DsProxy";
+import {ProxyRegistryInterface} from "../typechain/ProxyRegistryInterface";
 
 // const ERC20 = ethers.contract.fromArtifact("ERC20");
 
@@ -33,21 +35,21 @@ import {getProxy} from "./shared/utilities";
 // }
 
 describe("Leverage", function () {
-  let proxy: Contract;
+  let proxy: DsProxy;
   let proxyAddr: string;
-  let web3Proxy: Contract;
+  let web3Proxy: DsProxy;
 
   beforeEach(async () => {
     const provider = ethers.provider;
     const signer = provider.getSigner();
-    const registry = await ethers.getContractAt(
+    const registry : ProxyRegistryInterface = await ethers.getContractAt(
       "ProxyRegistryInterface",
       makerAddresses["PROXY_REGISTRY"]
-    );
+    ) as ProxyRegistryInterface;
     const proxyInfo = await getProxy(registry, signer, provider);
     proxy = proxyInfo.proxy;
     proxyAddr = proxyInfo.proxyAddr;
-    web3Proxy = await ethers.getContractAt("DSProxy", proxyAddr);
+    web3Proxy = await ethers.getContractAt("DSProxy", proxyAddr) as DsProxy;
   });
 
   it("should create", async () => {

@@ -13,16 +13,14 @@ contract FlashSwapCompoundHandler is IUniswapV2Callee {
     using SafeERC20 for IERC20;
 
     address public constant COMPTROLLER_ADDR = 0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B;
-    address immutable factory;
+    address public constant UNISWAP_V2_FACTORY_ADDR = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
 
-    constructor(address _factory) public {
-        factory = _factory;
-    }
+    constructor() public {}
 
     function uniswapV2Call(address sender, uint amount0, uint amount1, bytes calldata data) external override {
         address token0 = IUniswapV2Pair(msg.sender).token0(); // fetch the address of token0
         address token1 = IUniswapV2Pair(msg.sender).token1(); // fetch the address of token1
-        assert(msg.sender == IUniswapV2Factory(factory).getPair(token0, token1)); // ensure that msg.sender is a V2 pair
+        assert(msg.sender == IUniswapV2Factory(UNISWAP_V2_FACTORY_ADDR).getPair(token0, token1)); // ensure that msg.sender is a V2 pair
         assert(amount0 == 0 || amount1 == 0); // this strategy is unidirectional
         address uniswapBorrowToken = amount0 == 0 ? token1 : token0;
         address uniswapRepayToken = amount0 == 0 ? token0 : token1;
@@ -45,7 +43,7 @@ contract FlashSwapCompoundHandler is IUniswapV2Callee {
         address[] memory path = new address[](2);
         path[0] = uniswapRepayToken;
         path[1] = uniswapBorrowToken;
-        IERC20(uniswapRepayToken).safeTransfer(msg.sender, UniswapV2Library.getAmountsIn(factory, uniswapBorrowTokenAmount, path)[0]);
+        IERC20(uniswapRepayToken).safeTransfer(msg.sender, UniswapV2Library.getAmountsIn(UNISWAP_V2_FACTORY_ADDR, uniswapBorrowTokenAmount, path)[0]);
     }
 
     // Context: DSProxy

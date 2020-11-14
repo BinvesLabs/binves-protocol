@@ -9,12 +9,16 @@ import IERC20Artifact from "@openzeppelin/contracts/build/contracts/IERC20.json"
 import {Ierc20} from "../typechain/Ierc20";
 import {IUniswapV2Pair} from "../typechain/IUniswapV2Pair";
 import UniswapV2PairArtifact from "@uniswap/v2-core/build/UniswapV2Pair.json";
+import {ParamType} from "ethers/lib/utils";
 
 describe("FlashSwapCompoundHandler", function () {
     const BINANCE_ADDRESS = "0x3f5CE5FBFe3E9af3971dD833D26bA9b5C936f0bE";
     let dsProxy: DsProxy;
     let wbtc: Ierc20;
+    let dai: Ierc20;
     let wbtc_eth_pair: IUniswapV2Pair;
+    let flashSwapCompoundHandler: FlashSwapCompoundHandler;
+    let flashSwapCompoundHandlerFactory: FlashSwapCompoundHandlerFactory;
 
     beforeEach(async () => {
         const provider = ethers.provider;
@@ -34,16 +38,19 @@ describe("FlashSwapCompoundHandler", function () {
             }
         )
         wbtc = await ethers.getContractAt(IERC20Artifact.abi, "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599") as Ierc20;
+        dai = await ethers.getContractAt(IERC20Artifact.abi, "0x6b175474e89094c44da98b954eedeac495271d0f") as Ierc20;
         await wbtc.connect(provider.getSigner(BINANCE_ADDRESS)).transfer(await signer.getAddress(), 1);
         expect(await wbtc.balanceOf(await signer.getAddress())).to.equal(1);
         // Deploy FlashSwapCompoundHandler
-        const flashSwapCompoundHandlerFactory: FlashSwapCompoundHandlerFactory = await ethers.getContractFactory("FlashSwapCompoundHandler") as FlashSwapCompoundHandlerFactory;
-        const flashSwapCompoundHandler: FlashSwapCompoundHandler = await flashSwapCompoundHandlerFactory.deploy();
+        flashSwapCompoundHandlerFactory = await ethers.getContractFactory("FlashSwapCompoundHandler") as FlashSwapCompoundHandlerFactory;
+        flashSwapCompoundHandler = await flashSwapCompoundHandlerFactory.deploy();
         await flashSwapCompoundHandler.deployed();
         // Load WBTC/ETH pair
         wbtc_eth_pair = await ethers.getContractAt(UniswapV2PairArtifact.abi, "0xbb2b8038a1640196fbe3e38816f3e67cba72d940") as IUniswapV2Pair;
     });
 
     it("flash swap", async () => {
+        const paramsData : string = flashSwapCompoundHandler.interface._encodeParams([ParamType.fromString("address"), ParamType.fromString("address"), ParamType.fromString("address")], [wbtc.address, dai.address, dsProxy.address]);
+        await wbtc_eth_pair.swap(2, 0, flashSwapCompoundHandler.address, paramsData);
     });
 });

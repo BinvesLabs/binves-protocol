@@ -8,6 +8,7 @@ import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import "./interfaces/DSProxyInterface.sol";
 import "./interfaces/CTokenInterface.sol";
 import "./interfaces/ComptrollerInterface.sol";
+import "hardhat/console.sol";
 
 contract FlashSwapCompoundHandler is IUniswapV2Callee {
     using SafeERC20 for IERC20;
@@ -38,6 +39,9 @@ contract FlashSwapCompoundHandler is IUniswapV2Callee {
                 cCollateralToken,
                 cBorrowToken,
                 uniswapBorrowTokenAmount);
+        console.log("FlashSwapCompoundHandler: FlashSwapCompoundHandler address %s", address(this));
+        console.log("FlashSwapCompoundHandler: openLoanLogicData %s, %s, %s", cCollateralToken, cBorrowToken, uniswapBorrowTokenAmount);
+        console.log("FlashSwapCompoundHandler: dsProxy %s", dsProxy);
         DSProxyInterface(dsProxy).execute(address(this), openLoanLogicData);
         // Repay the loan with the money DSProxy sent back. msg.sender here is uniswap pair.
         address[] memory path = new address[](2);
@@ -48,6 +52,7 @@ contract FlashSwapCompoundHandler is IUniswapV2Callee {
 
     // Context: DSProxy
     function openLoan(address cCollateralToken, address cBorrowToken, uint uniswapBorrowTokenAmount) public {
+        console.log("HELLO!");
         address collateralToken = CTokenInterface(cCollateralToken).underlying();
         address borrowToken = CTokenInterface(cBorrowToken).underlying();
         uint collateralTokenAmount = IERC20(collateralToken).balanceOf(address(this));

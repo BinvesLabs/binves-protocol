@@ -63,12 +63,14 @@ describe("Leverage", function () {
     compoundTakerFactory = (await ethers.getContractFactory(
       "CompoundTaker"
     )) as CompoundTakerFactory;
+    flashSwapCompoundHandler = await flashSwapCompoundHandlerFactory.deploy();
+    await flashSwapCompoundHandler.deployed();
     compoundTaker = await compoundTakerFactory.deploy();
     await compoundTaker.deployed();
     destTokenContract = await ethers.getContractAt("IERC20", destAddr)
-    proxyPermission = await ethers.getContractFactory("ProxyPermission")
-    const proxyPerm = await proxyPermission.deploy();
-    await proxyPerm.deployed();
+    // proxyPermission = await ethers.getContractFactory("ProxyPermission")
+    // const proxyPerm = await proxyPermission.deploy();
+    // await proxyPerm.deployed();
     // proxyPerm.givePermission(proxyAddr);
     // dsAuth = await ethers.getContractAt("DSAuth", proxyAddr);
     // dsAuth = await dsAuthFactory.deploy();
@@ -79,6 +81,7 @@ describe("Leverage", function () {
     console.log("User address", account);
     console.log("dest address", destAddr);
     console.log("Proxy address", proxyAddr);
+    console.log("FlashSwapCompoundHandler address", flashSwapCompoundHandler.address);
     await network.provider.request({
             method: "hardhat_impersonateAccount",
             // Binance account
@@ -88,13 +91,14 @@ describe("Leverage", function () {
     await destTokenContract.connect(provider.getSigner(BINANCE_ADDRESS)).transfer(await signer.getAddress(), 10);
     const destTokenBal = await destTokenContract.balanceOf(account);
     // expect(destTokenBal.to.equal(10));
-    console.log(ethers.utils.formatUnits(destTokenBal, 'wei'));
+    console.log("User USDT balance: %s", ethers.utils.formatUnits(destTokenBal, 'wei'));
     web3Proxy = (await ethers.getContractAt("DSProxy", proxyAddr)) as DsProxy;
     web3ProxySigned = web3Proxy.connect(signer);
-    flashSwapCompoundHandler = await flashSwapCompoundHandlerFactory.deploy();
+
     // await destTokenContract.connect(signer).approve(proxyAddr, 10);
+    console.log("Transfer 10 USDT from User to Proxy");
     await destTokenContract.connect(signer).transfer(proxyAddr, 10);
-    await flashSwapCompoundHandler.deployed();
+    console.log()
   });
 
   it("creates", async () => {
@@ -102,7 +106,7 @@ describe("Leverage", function () {
     const destAmount = ethers.utils.parseEther("1");
     // await destTokenContract.approve(proxyAddr, ethers.utils.parseEther('1'));
     const proxyBal = await destTokenContract.balanceOf(proxyAddr)
-    console.log(ethers.utils.formatUnits(proxyBal, 'wei'));
+    console.log("Proxy USDT balance: %s", ethers.utils.formatUnits(proxyBal, 'wei'));
     const callData = compoundTaker.interface.encodeFunctionData(
       "startLeveragedLoan",
       [

@@ -45,10 +45,9 @@ contract CompoundTaker is ProxyPermission {
         address pairAddr;
 
         // IERC20(destAddr).safeIncreaseAllowance(address(this), 10);
-        console.log(IERC20(destAddr).balanceOf(msg.sender));
-        console.log(IERC20(destAddr).allowance(msg.sender, msg.sender));
-        console.log(IERC20(destAddr).balanceOf(address(this)));
-        console.log("Pulling %s from %s to %s", destAddr, msg.sender, address(this));
+        console.log("User USDT balance: %d", IERC20(destAddr).balanceOf(msg.sender));
+        console.log("User Allowance USDT balance: %d", IERC20(destAddr).allowance(msg.sender, msg.sender));
+        console.log("address(this) in CompoundTaker: %s", address(this));
         // IERC20(destAddr).safeTransferFrom(msg.sender, address(this), destAmount);
         // if (destAddr != ETH_ADDRESS) {
             // IERC20(destAddr).transferFrom(msg.sender, address(this), destAmount);

@@ -1,7 +1,9 @@
 pragma solidity >=0.6.0;
 
-
 abstract contract DSGuard {
+
+    address public owner;
+
     function canCall(address src_, address dst_, bytes4 sig) public view virtual returns (bool);
 
     function permit(bytes32 src, bytes32 dst, bytes32 sig) public virtual;
